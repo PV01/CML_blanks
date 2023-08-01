@@ -92,7 +92,7 @@ wks_info_heat<-wks_info %>%
 r2g <- c("#D61818", "#FFAE63", "#FFFFBD", "#B5E384")
 g2r <- c("#B5E384", "#FFFFBD", "#FFAE63", "#D61818")
   
-calendarHeat(wks_info_heat$WORKSHEET_DATE, wks_info_heat$n,  ncolors = 99, color = "g2r", varname="Samples/worksheet")
+calendarHeat(wks_info_heat$WORKSHEET_DATE, wks_info_heat$n,  ncolors = 99, color = "g2r", varname="Nr. Samples/Worksheet")
 #############################################################################################
 
 
@@ -151,13 +151,10 @@ info<-cDNA_wks_info %>%
 
 
 ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
-  geom_boxplot(fill="darkgreen")+
-  geom_boxplot(aes(x=WEEKDAY, y=Nr_cDNAs_RMPD), fill="orange")
+  geom_boxplot(fill="darkgreen")
 
 ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
-  geom_boxplot(fill="lightgrey")+
-  geom_violin(fill="darkgreen")+
-  geom_violin(aes(x=WEEKDAY, y=Nr_cDNAs_RMPD), fill="orange")
+  ggeom_boxplot(aes(x=WEEKDAY, y=Nr_cDNAs_RMPD), fill="orange")
 
 
 ####################################################
@@ -214,4 +211,5 @@ cDNA_prelist %>%
 #16        116377 D23.22891      R-BCR    2         cDNA Prep      2023-03-31     2023-03-31          08:55
 
 
-
+#par(mfrow) and layout()
+#https://bookdown.org/ndphillips/YaRrr/arranging-plots-with-parmfrow-and-layout.html
