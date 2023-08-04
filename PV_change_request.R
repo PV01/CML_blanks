@@ -8,6 +8,9 @@ library(readxl)
 library(stringr)
 library(makeR)
 library(ggplot2)
+library(grid)
+library(gridExtra)
+library(RColorBrewer)
 
 
 query_db<-function(query){
@@ -39,10 +42,11 @@ get_wks_info<-function(){
 
 wks_info<-get_wks_info()
 
+
+################################################################################
 wks_info %>%
   distinct(WORKSHEET, .keep_all=TRUE) %>%
         count(WORKSHEET_WEEKDAY)
-
 #WORKSHEET_WEEKDAY  n
 #1            Monday  9
 #2          Thursday  4
@@ -55,7 +59,6 @@ wks_info %>%
                      count(WORKSHEET, name="cDNA_prep_dates") %>%
                      count(cDNA_prep_dates, name="Worksheets") %>%
                      select(Worksheets,cDNA_prep_dates)
-
 #Worksheets cDNA_prep_dates
 #1          2               1
 #2          4               2
@@ -65,34 +68,53 @@ wks_info %>%
 #6          1               7
 
 
-
 sample_nr<-wks_info %>%
                   distinct(WORKSHEET, LABNO, .keep_all = TRUE) %>%
                   count(WORKSHEET, name="Nr_Samples") 
 
-hist(sample_nr$Nr_Samples)
-
-my_hist <- hist(sample_nr$Nr_Samples)                     # Store histogram info
-my_hist$counts <- cumsum(my_hist$counts)    # Change histogram counts
-plot(my_hist) 
 
 
-
-
-ggplot(sample_nr, aes(X=Nr_Samples))+
-  geom_histogram()
-
-
-#####################################################################################################
-wks_info_heat<-wks_info %>%
-                  mutate(WORKSHEET_DATE=as.Date(WORKSHEET_DATE)) %>%
-                  select(WORKSHEET_DATE, LABNO) %>%
-                  distinct() %>%
-                  count(WORKSHEET_DATE)
-r2g <- c("#D61818", "#FFAE63", "#FFFFBD", "#B5E384")
+############################ calendar heat
 g2r <- c("#B5E384", "#FFFFBD", "#FFAE63", "#D61818")
+
+
+wks_heat_samples<-wks_info %>%
+                            mutate(WORKSHEET_DATE=as.Date(WORKSHEET_DATE)) %>%
+                            select(WORKSHEET_DATE, LABNO) %>%
+                            distinct() %>%
+                            count(WORKSHEET_DATE)
   
-calendarHeat(wks_info_heat$WORKSHEET_DATE, wks_info_heat$n,  ncolors = 99, color = "g2r", varname="Nr. Samples/Worksheet")
+plot_wks_info_heat<-calendarHeat(wks_heat_samples$WORKSHEET_DATE, wks_heat_samples$n,  ncolors = 99, color = "g2r", varname="Nr. Samples/Worksheet")
+
+wks_heat_cDNA_blanks<-wks_info %>%
+                      mutate(WORKSHEET_DATE=as.Date(WORKSHEET_DATE)) %>%
+                      select(WORKSHEET_DATE, EXTRACTION_DATE) %>%
+                      distinct() %>%
+                      count(WORKSHEET_DATE)
+
+plot_heat_cDNA_blanks<-calendarHeat(wks_heat_cDNA_blanks$WORKSHEET_DATE, wks_heat_cDNA_blanks$n,  ncolors = 99, color = "g2r", varname="Nr. Prep Dates/Worksheet")
+
+pdf(file = "myplot.pdf")
+par(mfrow = c(2, 2))
+calendarHeat(wks_heat_samples$WORKSHEET_DATE, wks_heat_samples$n,  ncolors = 99, color = "g2r", varname="Nr. Samples/Worksheet")
+calendarHeat(wks_heat_cDNA_blanks$WORKSHEET_DATE, wks_heat_cDNA_blanks$n,  ncolors = 99, color = "g2r", varname="Nr. Prep Dates/Worksheet")
+dev.off()
+
+
+
+
+
+grid.arrange(p3,p4, heights=c(0.2, 0.8), nrow =2)
+
+png("test.png", width = 12*100, height = 6*100)
+grid.arrange(p3,p4, heights=c(0.2, 0.8), nrow =2)
+dev.off()
+
+
+
+
+
+
 #############################################################################################
 
 
@@ -150,11 +172,14 @@ info<-cDNA_wks_info %>%
            mutate(WEEKDAY=factor(WEEKDAY, levels=c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday")))
 
 
-ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
-  geom_boxplot(fill="darkgreen")
+p3<-ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
+     geom_boxplot(fill="darkgreen")
 
-ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
-  ggeom_boxplot(aes(x=WEEKDAY, y=Nr_cDNAs_RMPD), fill="orange")
+p4<-ggplot(info, aes(x=WEEKDAY, y=Nr_cDNAs_TOTAL))+
+  geom_boxplot(aes(x=WEEKDAY, y=Nr_cDNAs_RMPD), fill="orange")
+
+
+grid.arrange(p3, p4, ncol = 2, main = "Main title")
 
 
 ####################################################
